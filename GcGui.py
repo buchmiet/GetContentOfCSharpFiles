@@ -184,13 +184,23 @@ class PathManagerApp(App):
     # ---------- COMMAND METHODS ---------- #
     def _handle_add_path(self, from_input: Input | None = None) -> None:
         inp = from_input or self.query_one("#path-input")
-        path = inp.value.strip()
-        if not path:
+        raw_path = inp.value.strip()
+
+        if not raw_path:
             self.notify("Path cannot be empty.", title="Warning", severity="warning")
-        elif path in self.paths:
+            inp.focus()
+            return
+
+        # Visual Studio allows easy copying of the *.csproj file path.  If such
+        # a path is provided, treat its parent directory as the target folder.
+        path = raw_path
+        if raw_path.lower().endswith(".csproj") and os.path.isfile(raw_path):
+            path = os.path.dirname(raw_path)
+
+        if path in self.paths:
             self.notify(f"'{path}' already exists.", title="Warning", severity="warning")
         elif not os.path.isdir(path):
-            self.notify(f"'{path}' is not a directory.", title="Error", severity="error")
+            self.notify(f"'{raw_path}' is not a directory.", title="Error", severity="error")
         else:
             self._add_path(path)
             self.notify(f"Added: {path}", severity="information")
