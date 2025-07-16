@@ -10,6 +10,7 @@ Autor: Twój pierwotny kod + logika scalona przez ChatGPT
 import os
 import json
 import uuid
+import re
 from pathlib import Path
 
 import pyperclip                        # operacje na schowku
@@ -19,12 +20,22 @@ from textual.widgets import Button, Input, ListView, Label, Static
 from textual.reactive import reactive
 from textual.message import Message
 
+DEFAULT_PATTERN_STRING = "*.cs;*.csproj;*.props*;*.md"
+
+def parse_patterns(pattern_string: str) -> list[str]:
+    """Return patterns list split on ';' or ','."""
+    return [p.strip() for p in re.split(r"[;,]+", pattern_string) if p.strip()]
+
 
 # ---------- DOMAIN / SERVICE LAYER ---------- #
 class PathProcessor:
     """Single-responsibility service: agreguje dane folderów."""
 
-    patterns = ("*.cs", "*.csproj")
+    patterns = parse_patterns(DEFAULT_PATTERN_STRING)
+
+    @classmethod
+    def update_patterns(cls, pattern_string: str) -> None:
+        cls.patterns = parse_patterns(pattern_string) or parse_patterns(DEFAULT_PATTERN_STRING)
 
     @classmethod
     def _read_file(cls, file_path: Path) -> str | None:
@@ -126,6 +137,9 @@ class PathManagerApp(App):
         grid-size: 2;
         grid-gutter: 1 0;
     }
+    #pattern-row { width: 100%; height: 3; align-vertical: middle; }
+    #pattern-input { width: 1fr; margin-right: 1; height: 100%; }
+    .pattern-label { width: auto; margin-right: 1; }
     #input-row { width: 100%; height: 3; align-vertical: middle; }
     #path-input { width: 1fr; margin-right: 1; height: 100%; }
     #get-path { width: auto; min-width: 10; }
@@ -149,6 +163,9 @@ class PathManagerApp(App):
             yield self.path_list
 
         with Container(id="controls-container"):
+            with Horizontal(id="pattern-row"):
+                yield Label("Patterns:", classes="pattern-label")
+                yield Input(DEFAULT_PATTERN_STRING, id="pattern-input")
             with Horizontal(id="input-row"):
                 yield Input(placeholder="Wprowadź ścieżkę…", id="path-input")
                 yield Button("Get Path", id="get-path", variant="primary")
@@ -218,6 +235,9 @@ class PathManagerApp(App):
         if not self.paths:
             self.notify("No paths to process.", title="Info", severity="information")
             return
+
+        pattern_str = self.query_one("#pattern-input").value
+        PathProcessor.update_patterns(pattern_str)
 
         folders, total_files = PathProcessor.collect(self.paths)
 
