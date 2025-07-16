@@ -132,9 +132,9 @@ class PathManagerApp(App):
     #bottom-buttons { width: 100%; height: 3; }
     #generate, #exit { width: 1fr; min-width: 10; }
     #exit { margin-left: 1; }
-    PathItem { margin: 0 0 1 0; }
-    .path-label { width: 1fr; content-align: left middle; margin-right: 1; }
-    .remove-button { width: auto; min-width: 8; content-align: center middle; }
+    PathItem { margin: 0; height: 1; }
+    .path-label { width: 1fr; content-align: left middle; margin-right: 1; height: 1; }
+    .remove-button { width: auto; min-width: 8; height: 1; content-align: center middle; }
     """
 
     def __init__(self) -> None:
